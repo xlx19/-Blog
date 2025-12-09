@@ -1,366 +1,286 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="scroll-smooth">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>薛某的Blog | 记录技术与生活</title>
-    <!-- Tailwind CSS -->
+    <title>我的个人博客</title>
+    <!-- 引入 Tailwind CSS 进行美化 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <script>
-        // 确保 tailwind 对象存在后再配置
-        window.addEventListener('load', function() {
-            if (typeof tailwind !== 'undefined') {
-                tailwind.config = {
-                    darkMode: 'class',
-                    theme: {
-                        extend: {
-                            fontFamily: {
-                                sans: ['"Noto Sans SC"', 'sans-serif'],
-                                mono: ['"JetBrains Mono"', 'monospace'],
-                            },
-                            colors: {
-                                primary: {
-                                    50: '#eff6ff',
-                                    100: '#dbeafe',
-                                    500: '#3b82f6',
-                                    600: '#2563eb',
-                                    700: '#1d4ed8',
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    </script>
+    <!-- 引入图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* 自定义滚动条 */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background-color: #cbd5e1;
-            border-radius: 20px;
-        }
-        .dark ::-webkit-scrollbar-thumb {
-            background-color: #475569;
-        }
+        /* 一些简单的自定义动画 */
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .markdown-body p { margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+        .markdown-body h2 { font-size: 1.5rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
+        .markdown-body blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; color: #4b5563; font-style: italic; background: #f3f4f6; padding: 1rem; border-radius: 0.25rem; }
+        .markdown-body pre { background: #1f2937; color: #e5e7eb; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
+        .markdown-body code { font-family: monospace; }
+        
+        /* 激活状态的按钮样式 */
+        .filter-btn.active { background-color: #dbeafe; color: #1d4ed8; border-color: transparent; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-300 min-h-screen flex flex-col">
+<body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
 
     <!-- 顶部导航栏 -->
-    <header class="sticky top-0 z-50 w-full backdrop-blur-lg bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                    <div class="bg-primary-600 text-white p-1.5 rounded-lg">
-                        <i data-lucide="terminal" class="w-5 h-5"></i>
-                    </div>
-                    <span class="font-mono font-bold text-xl tracking-tighter">薛某的<span class="text-primary-600">Blog</span></span>
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center cursor-pointer" onclick="showHome()">
+                    <i class="fa-solid fa-code text-blue-600 text-2xl mr-2"></i>
+                    <span class="font-bold text-xl tracking-tight text-gray-900">我的博客空间</span>
                 </div>
-
-                <!-- 桌面端导航 -->
-                <nav class="hidden md:flex gap-8 text-sm font-medium">
-                    <a href="#" class="text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">首页</a>
-                    <!-- 新增专栏链接 -->
-                    <a href="#projects" class="text-slate-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">专栏/实验室</a>
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">归档</a>
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">关于我</a>
-                    <a href="#" class="text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">GitHub</a>
-                </nav>
-
-                <!-- 功能区 -->
-                <div class="flex items-center gap-4">
-                    <!-- 暗黑模式切换按钮 -->
-                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none">
-                        <i data-lucide="sun" class="w-5 h-5 hidden dark:block text-slate-300"></i>
-                        <i data-lucide="moon" class="w-5 h-5 block dark:hidden text-slate-600"></i>
-                    </button>
-                    
-                    <!-- 移动端菜单按钮 -->
-                    <button class="md:hidden p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <i data-lucide="menu" class="w-6 h-6"></i>
-                    </button>
+                <div class="flex items-center space-x-4">
+                    <a href="https://github.com/xlx19" target="_blank" class="text-gray-500 hover:text-gray-900 transition"><i class="fa-brands fa-github text-xl"></i></a>
+                    <button onclick="alert('博主很懒，还没写关于页面！')" class="text-gray-500 hover:text-blue-600 transition font-medium">关于我</button>
                 </div>
             </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- 主体内容 -->
-    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            
-            <!-- 左侧：主要内容区域 (占8列) -->
-            <div class="lg:col-span-8 space-y-12">
-                
-                <!-- 专栏/实验室区域 -->
-                <section id="projects" class="scroll-mt-20">
-                    <div class="flex items-center gap-2 mb-6">
-                        <i data-lucide="flask-conical" class="w-6 h-6 text-primary-600 dark:text-primary-400"></i>
-                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">实验室 & 学习专栏</h2>
-                    </div>
-                    
-                    <!-- 修改为在大屏幕显示3列 -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <!-- 专栏项目卡片 1 -->
-                        <div class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
-                            <div class="h-32 bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-slate-700/80 transition-colors">
-                                <i data-lucide="gamepad-2" class="w-10 h-10 text-slate-400 group-hover:text-primary-500 transition-colors"></i>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-bold text-base text-slate-900 dark:text-white mb-2">Web 小游戏</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
-                                    使用纯 HTML/JS 实现的经典小游戏，包括贪吃蛇、俄罗斯方块等。
-                                </p>
-                                <a href="/games/snake.html" class="inline-flex items-center gap-1 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 px-3 py-1.5 rounded-md transition-colors">
-                                    <i data-lucide="play" class="w-3 h-3"></i> 点击试玩
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- 专栏项目卡片 2 -->
-                        <div class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
-                            <div class="h-32 bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-slate-700/80 transition-colors">
-                                <i data-lucide="bar-chart-3" class="w-10 h-10 text-slate-400 group-hover:text-primary-500 transition-colors"></i>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-bold text-base text-slate-900 dark:text-white mb-2">数据可视化</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
-                                    基于 D3.js 和 ECharts 的数据大屏展示页面，包含动态图表效果。
-                                </p>
-                                <a href="/demos/dashboard.html" class="inline-flex items-center gap-1 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 px-3 py-1.5 rounded-md transition-colors">
-                                    <i data-lucide="eye" class="w-3 h-3"></i> 查看演示
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- 新增：STM32 学习专栏卡片 -->
-                        <div class="group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow">
-                            <div class="h-32 bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-primary-50 dark:group-hover:bg-slate-700/80 transition-colors">
-                                <!-- 使用 cpu 图标 -->
-                                <i data-lucide="cpu" class="w-10 h-10 text-slate-400 group-hover:text-primary-500 transition-colors"></i>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="font-bold text-base text-slate-900 dark:text-white mb-2">STM32 笔记</h3>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
-                                    从点灯到 RTOS，记录嵌入式开发的实战项目与踩坑经历。
-                                </p>
-                                <a href="/stm32/index.html" class="inline-flex items-center gap-1 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 px-3 py-1.5 rounded-md transition-colors">
-                                    <i data-lucide="book-open" class="w-3 h-3"></i> 查看笔记
-                                </a>
-                            </div>
-                        </div>
-
-                    </div>
-                </section>
-
-                <hr class="border-slate-200 dark:border-slate-800">
-
-                <!-- 博客文章列表区域 -->
-                <section>
-                    <div class="flex items-center gap-2 mb-6">
-                        <i data-lucide="book-open" class="w-6 h-6 text-primary-600 dark:text-primary-400"></i>
-                        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">最新文章</h2>
-                    </div>
-
-                    <div class="space-y-10">
-                        <!-- 文章 1 -->
-                        <article class="group relative flex flex-col gap-4">
-                            <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono">
-                                <time datetime="2023-10-24">2023-10-24</time>
-                                <span>•</span>
-                                <span class="text-primary-600 dark:text-primary-400 font-medium">Cloudflare</span>
-                            </div>
-                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                <a href="#">Hello World: 成功将博客部署到 Cloudflare Pages</a>
-                            </h2>
-                            <p class="text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
-                                终于完成了博客的迁移！这篇文章记录了我如何使用 Cloudflare Pages 托管静态网站，并绑定了自定义域名 zeroio.cn。相比于传统的服务器部署，Pages 实在是太快、太方便了。
-                            </p>
-                            <div class="flex items-center gap-4 mt-2">
-                                <a href="#" class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">
-                                    阅读全文 <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                                </a>
-                            </div>
-                        </article>
-
-                        <hr class="border-dashed border-slate-200 dark:border-slate-800">
-
-                        <!-- 文章 2 -->
-                        <article class="group relative flex flex-col gap-4">
-                            <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono">
-                                <time datetime="2023-10-20">2023-10-20</time>
-                                <span>•</span>
-                                <span class="text-primary-600 dark:text-primary-400 font-medium">Hexo</span>
-                            </div>
-                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                <a href="#">Hexo vs Hugo：静态博客生成器该怎么选？</a>
-                            </h2>
-                            <p class="text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
-                                在搭建博客之前，我纠结了很久是选 Hexo 还是 Hugo。Hexo 拥有庞大的插件生态和精美的主题，特别适合前端开发者；而 Hugo 则以构建速度极快著称。本文详细对比了两者优缺点。
-                            </p>
-                            <div class="flex items-center gap-4 mt-2">
-                                <a href="#" class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">
-                                    阅读全文 <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                                </a>
-                            </div>
-                        </article>
-
-                        <hr class="border-dashed border-slate-200 dark:border-slate-800">
-
-                        <!-- 文章 3 -->
-                        <article class="group relative flex flex-col gap-4">
-                            <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono">
-                                <time datetime="2023-10-15">2023-10-15</time>
-                                <span>•</span>
-                                <span class="text-primary-600 dark:text-primary-400 font-medium">Coding</span>
-                            </div>
-                            <h2 class="text-2xl font-bold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                                <a href="#">TypeScript 高级类型实战技巧</a>
-                            </h2>
-                            <p class="text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3">
-                                记录一下在实际项目中使用 TypeScript 的一些高级技巧，包括泛型工具类型、条件类型以及如何在 React 组件中优雅地定义 Props。
-                            </p>
-                            <div class="flex items-center gap-4 mt-2">
-                                <a href="#" class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">
-                                    阅读全文 <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                                </a>
-                            </div>
-                        </article>
-                    </div>
-
-                    <!-- 分页 -->
-                    <div class="pt-10 flex justify-center">
-                        <nav class="flex gap-2">
-                            <span class="px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-lg cursor-not-allowed">上一页</span>
-                            <span class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg">1</span>
-                            <a href="#" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">2</a>
-                            <a href="#" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">3</a>
-                            <a href="#" class="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">下一页</a>
-                        </nav>
-                    </div>
-                </section>
+    <!-- 主要内容区域 -->
+    <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- 首页：文章列表 (默认显示) -->
+        <div id="home-view" class="fade-in">
+            <!-- 个人简介卡片 -->
+            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 mb-10 text-white shadow-lg">
+                <h1 class="text-3xl font-bold mb-4">欢迎来到我的数字花园 🌱</h1>
+                <p class="text-blue-100 text-lg max-w-2xl">
+                    这是一个又菜又爱折腾的大一菜鸟新生。
+                    网络工程兼半个物联网工程专业。
+                    <br>目前正在学习：Cloudflare 部署、STM32及Arduino单片机。
+                </p>
             </div>
 
-            <!-- 右侧：侧边栏 (占4列) -->
-            <aside class="lg:col-span-4 space-y-8">
-                
-                <!-- 个人简介卡片 -->
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm sticky top-24">
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                            薛
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">薛某的Blog</h3>
-                            <p class="text-sm text-slate-500 dark:text-slate-400">Full Stack Developer</p>
-                        </div>
-                    </div>
-                    <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6 font-mono">
-                        no input no output
-                    </p>
-                    <div class="flex gap-3 justify-start">
-                        <a href="#" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><i data-lucide="github" class="w-5 h-5"></i></a>
-                        <a href="#" class="text-slate-400 hover:text-blue-400 transition-colors"><i data-lucide="twitter" class="w-5 h-5"></i></a>
-                        <a href="#" class="text-slate-400 hover:text-blue-600 transition-colors"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
-                        <a href="#" class="text-slate-400 hover:text-red-500 transition-colors"><i data-lucide="mail" class="w-5 h-5"></i></a>
-                    </div>
-                </div>
+            <!-- 分类标签 (已修改：增加了点击事件和 HTML实验室) -->
+            <div class="flex space-x-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+                <button onclick="filterPosts('全部', this)" class="filter-btn active px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 cursor-pointer whitespace-nowrap transition">全部</button>
+                <button onclick="filterPosts('技术笔记', this)" class="filter-btn px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 cursor-pointer whitespace-nowrap transition">技术笔记</button>
+                <button onclick="filterPosts('生活随笔', this)" class="filter-btn px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 cursor-pointer whitespace-nowrap transition">生活随笔</button>
+                <button onclick="filterPosts('HTML实验室', this)" class="filter-btn px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 cursor-pointer whitespace-nowrap transition"><i class="fa-solid fa-flask mr-1"></i>HTML 实验室</button>
+            </div>
 
-                <!-- 标签云 -->
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Tags</h3>
-                    <div class="flex flex-wrap gap-2">
-                        <a href="#" class="px-3 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">JavaScript</a>
-                        <a href="#" class="px-3 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">React</a>
-                        <a href="#" class="px-3 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Vue</a>
-                        <a href="#" class="px-3 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Cloudflare</a>
-                        <a href="#" class="px-3 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Hexo</a>
-                        <a href="#" class="px-3 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">STM32</a>
-                        <a href="#" class="px-3 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Web3</a>
-                    </div>
-                </div>
+            <!-- 文章列表容器 -->
+            <div id="posts-container" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <!-- 文章卡片会通过 JavaScript 自动生成在这里 -->
+            </div>
 
-                <!-- 推荐阅读 -->
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Featured</h3>
-                    <ul class="space-y-4">
-                        <li>
-                            <a href="#" class="group block">
-                                <h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">如何配置 VS Code 提高开发效率</h4>
-                                <span class="text-xs text-slate-400 mt-1 block">2023-09-12</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="group block">
-                                <h4 class="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">STM32 HAL库开发指南</h4>
-                                <span class="text-xs text-slate-400 mt-1 block">2023-08-30</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-            </aside>
+            <!-- 空状态提示 -->
+            <div id="empty-state" class="hidden text-center py-20">
+                <div class="text-gray-300 text-6xl mb-4"><i class="fa-regular fa-folder-open"></i></div>
+                <p class="text-gray-500 text-lg">这个分类下暂时没有内容哦</p>
+            </div>
         </div>
+
+        <!-- 文章详情页 (默认隐藏) -->
+        <div id="article-view" class="hidden fade-in">
+            <button onclick="showHome()" class="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition font-medium">
+                <i class="fa-solid fa-arrow-left mr-2"></i> 返回首页
+            </button>
+            <article class="bg-white rounded-2xl shadow-sm p-8 md:p-12 border border-gray-100">
+                <div class="mb-8 border-b border-gray-100 pb-8">
+                    <div class="flex items-center text-sm text-gray-500 mb-3 space-x-4">
+                        <span id="article-date"><i class="far fa-calendar-alt mr-1"></i> 2023-10-24</span>
+                        <span id="article-category" class="px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-600">技术</span>
+                    </div>
+                    <h1 id="article-title" class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">文章标题加载中...</h1>
+                </div>
+                <!-- 文章正文 -->
+                <div id="article-content" class="markdown-body text-lg">
+                    内容加载中...
+                </div>
+            </article>
+        </div>
+
     </main>
 
-    <!-- 页脚 -->
-    <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mt-auto">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <!-- 修正了页脚 Logo 文本 -->
-                    <span class="font-mono font-bold text-lg text-slate-900 dark:text-white">薛某的<span class="text-primary-600">Blog</span></span>
-                    <span class="text-slate-400 text-sm">© 2023</span>
-                </div>
-                <div class="text-slate-500 dark:text-slate-400 text-sm text-center md:text-right">
-                    <p>Designed for Developers. Powered by <a href="#" class="hover:text-primary-600 hover:underline">Cloudflare Pages</a>.</p>
-                </div>
-            </div>
+    <!-- 底部 -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
+        <div class="max-w-5xl mx-auto px-4 text-center text-gray-500 text-sm">
+            <p>&copy; 2024 xlx19. All rights reserved.</p>
+            <p class="mt-2">Powered by Cloudflare Pages</p>
         </div>
     </footer>
 
+    <!-- 逻辑脚本 -->
     <script>
-        // 初始化图标 - 增加安全性检查
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        } else {
-            console.error('Lucide library failed to load.');
-        }
+        // ==========================================
+        //         👇 在这里修改你的文章数据 👇
+        // ==========================================
+        const blogPosts = [
+            {
+                id: 1,
+                title: "Hello World: 成功将博客部署到 Cloudflare Pages",
+                date: "2024-05-20",
+                category: "技术笔记", // 修改分类以匹配按钮
+                summary: "终于完成了博客的迁移！这篇文章记录了我如何使用 Cloudflare Pages 托管静态网站，简直太快、太方便了。",
+                content: `
+                    <p>大家好！这是我的第一篇博客文章。</p>
+                    <p>当你看到这个页面时，说明我已经成功学会了如何使用 GitHub 和 Cloudflare Pages 来搭建网站。</p>
+                    <h2>为什么选择 Cloudflare Pages？</h2>
+                    <p>因为它完全免费，而且速度非常快。对于像我这样的初学者来说，不需要购买服务器，只要有代码就能跑起来。</p>
+                `
+            },
+            {
+                id: 2,
+                title: "Cloudflare 部署避坑指南",
+                date: "2024-05-21",
+                category: "技术笔记",
+                summary: "在连接 Git 的时候遇到了很多选项不知道怎么填？Framework preset 到底选什么？这篇文章告诉你答案。",
+                content: `
+                    <p>今天在部署的时候卡了一会儿，主要是构建配置（Build Settings）那里。</p>
+                    <h2>关键点</h2>
+                    <p>如果你也是像我一样手写的 HTML 静态页面，切记：</p>
+                    <p>1. <b>Framework preset</b> 选 None。</p>
+                    <p>2. <b>Build command</b> 留空。</p>
+                    <p>3. <b>Output directory</b> 留空。</p>
+                `
+            },
+            {
+                id: 3,
+                title: "我的未来学习计划",
+                date: "2024-05-22",
+                category: "生活随笔", // 修改分类以匹配按钮
+                summary: "有了博客只是第一步，接下来我要通过这个平台督促自己坚持学习。",
+                content: `
+                    <p>立个 Flag，接下来我要系统性地学习以下内容：</p>
+                    <p>- 深入理解 HTML5 和 CSS3</p>
+                    <p>- JavaScript 基础语法</p>
+                    <p>- 尝试写一个简单的 Web 小游戏</p>
+                    <p>加油！</p>
+                `
+            },
+            {
+                id: 4,
+                title: "HTML 实验室：测试我的第一个代码块",
+                date: "2024-05-23",
+                category: "HTML实验室", // 新增分类
+                summary: "这是一个专门用来测试 HTML 特性的区域。今天我们来试着写一段跑马灯代码。",
+                content: `
+                    <p>欢迎来到 HTML 实验室！这里我会放一些好玩的代码片段。</p>
+                    <h2>跑马灯测试</h2>
+                    <div style="background: #000; color: #0f0; padding: 10px; border-radius: 5px; font-family: monospace;">
+                        <marquee>系统启动中... Loading HTML Lab... 进度 99%</marquee>
+                    </div>
+                    <br>
+                    <p>虽然 <code style="background:#eee; padding:2px 4px;">&lt;marquee&gt;</code> 标签已经过时了，但用来做复古效果还是很有趣的！</p>
+                `
+            }
+        ];
+        // ==========================================
+        //         👆 修改结束 👆
+        // ==========================================
 
-        // 暗黑模式逻辑
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const html = document.documentElement;
+        const homeView = document.getElementById('home-view');
+        const articleView = document.getElementById('article-view');
+        const postsContainer = document.getElementById('posts-container');
+        const emptyState = document.getElementById('empty-state');
         
-        // 检查本地存储或系统偏好
-        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            html.classList.add('dark');
-        } else {
-            html.classList.remove('dark');
+        // 初始化
+        function init() {
+            renderPosts(blogPosts); // 默认显示所有文章
+            
+            // 浏览器后退处理
+            window.onpopstate = function(event) {
+                if (event.state && event.state.page === 'article') {
+                    openArticle(event.state.id, false);
+                } else {
+                    showHome(false);
+                }
+            };
         }
 
-        // 切换模式
-        if (themeToggleBtn) {
-            themeToggleBtn.addEventListener('click', () => {
-                if (html.classList.contains('dark')) {
-                    html.classList.remove('dark');
-                    localStorage.theme = 'light';
-                } else {
-                    html.classList.add('dark');
-                    localStorage.theme = 'dark';
-                }
+        // 核心：筛选文章函数
+        function filterPosts(category, btnElement) {
+            // 1. 更新按钮样式
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'border-transparent');
+                btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
             });
+            // 激活当前点击的按钮
+            btnElement.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
+            btnElement.classList.add('active', 'bg-blue-100', 'text-blue-700', 'border-transparent');
+
+            // 2. 筛选数据
+            if (category === '全部') {
+                renderPosts(blogPosts);
+            } else {
+                const filtered = blogPosts.filter(post => post.category === category);
+                renderPosts(filtered);
+            }
         }
+
+        // 渲染文章卡片 (接收一个文章数组作为参数)
+        function renderPosts(posts) {
+            if (posts.length === 0) {
+                postsContainer.innerHTML = '';
+                postsContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            postsContainer.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            postsContainer.innerHTML = posts.map(post => `
+                <div onclick="openArticle(${post.id})" class="bg-white rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 overflow-hidden group flex flex-col h-full">
+                    <div class="p-6 flex flex-col flex-grow">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">${post.category}</span>
+                            <span class="text-xs text-gray-400">${post.date}</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition">${post.title}</h3>
+                        <p class="text-gray-600 text-sm line-clamp-3 mb-4 flex-grow">${post.summary}</p>
+                        <div class="text-blue-600 text-sm font-medium mt-auto group-hover:translate-x-1 transition-transform inline-block">
+                            阅读全文 <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openArticle(id, pushState = true) {
+            const post = blogPosts.find(p => p.id === id);
+            if (!post) return;
+
+            document.getElementById('article-title').innerText = post.title;
+            document.getElementById('article-date').innerHTML = `<i class="far fa-calendar-alt mr-1"></i> ${post.date}`;
+            document.getElementById('article-category').innerText = post.category;
+            document.getElementById('article-content').innerHTML = post.content;
+
+            homeView.classList.add('hidden');
+            articleView.classList.remove('hidden');
+            window.scrollTo(0, 0);
+
+            if (pushState) {
+                try {
+                    history.pushState({ page: 'article', id: id }, null, `?p=${id}`);
+                } catch (e) { console.log("预览模式不更新 URL"); }
+            }
+        }
+
+        function showHome(pushState = true) {
+            articleView.classList.add('hidden');
+            homeView.classList.remove('hidden');
+            window.scrollTo(0, 0);
+
+            if (pushState) {
+                try {
+                    history.pushState({ page: 'home' }, null, window.location.pathname);
+                } catch (e) { console.log("预览模式不更新 URL"); }
+            }
+        }
+
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('p')) openArticle(parseInt(urlParams.get('p')), false);
+        } catch (e) {}
+
+        init();
     </script>
 </body>
 </html>
