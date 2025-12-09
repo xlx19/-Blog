@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPU6050 原理可视化 & 云台模拟</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        h1 { margin-bottom: 10px; }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 1200px;
+        }
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            cursor: grab;
+        }
+        canvas:active { cursor: grabbing; }
+        .data-box {
+            margin-top: 15px;
+            font-family: 'Consolas', monospace;
+            background: #2d2d2d;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .label { color: #aaa; }
+        .val { font-weight: bold; }
+        .highlight { color: #ffeb3b; }
+        .red { color: #ff4444; }
+        .blue { color: #4444ff; }
+        .green { color: #00cc00; }
+        
+        .explanation {
+            max-width: 800px;
+            margin-top: 20px;
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #2196f3;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>MPU6050 加速度计原理可视化</h1>
+    <p>请用鼠标<b>拖动左侧的板子</b>来旋转它</p>
+
+    <div class="container">
+        <!-- 传感器模拟区 -->
+        <div class="panel">
+            <h3>STM32 & MPU6050 (感知)</h3>
+            <canvas id="sensorCanvas" width="400" height="400"></canvas>
+            <div class="data-box">
+                <div><span class="label">状态:</span> <span id="statusText">平放</span></div>
+                <div style="margin-top:10px; border-top:1px solid #555; padding-top:5px;">模拟寄存器原始值 (Raw):</div>
+                <div><span class="label red">AX (X轴分量):</span> <span id="valAX" class="val">0</span></div>
+                <div><span class="label blue">AZ (Z轴分量):</span> <span id="valAZ" class="val">16384</span></div>
+                <div style="margin-top:10px; border-top:1px solid #555; padding-top:5px;">数学计算 (STM32):</div>
+                <div><span class="label">公式:</span> atan2(AX, AZ) * 57.3</div>
+                <div><span class="label highlight">Pitch (计算角度):</span> <span id="valPitch" class="val highlight">0.0°</span></div>
+            </div>
+        </div>
+
+        <!-- 舵机模拟区 -->
+        <div class="panel">
+            <h3>舵机云台 (执行)</h3>
+            <canvas id="servoCanvas" width="300" height="400"></canvas>
+            <div class="data-box">
+                <div><span class="label">目标逻辑:</span> 保持水平</div>
+                <div style="margin-top:10px;">控制信号:</div>
+                <div><span class="label">Target = </span> 90 + Pitch</div>
+                <div><span class="label highlight">舵机角度:</span> <span id="valServo" class="val highlight">90.0°</span></div>
+                <div><span class="label">PWM CCR:</span> <span id="valCCR" class="val">1500</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <strong>原理图解：</strong><br>
+        1. <b>绿色箭头</b> 代表重力 (G)，永远垂直向下。<br>
+        2. 当板子旋转时，重力被分解到了 <b>红色(X轴)</b> 和 <b>蓝色(Z轴)</b> 上。<br>
+        3. <b>AX (红线长度)</b> 变大，说明板子竖起来了；<b>AZ (蓝线长度)</b> 变大，说明板子是平的。<br>
+        4. <b>atan2(AX, AZ)</b> 就是利用这两条红蓝线的比例，反向算出板子歪了多少度。<br>
+        5. 右边的舵机根据算出的角度，向反方向旋转，从而让上面的摄像头保持水平。
+    </div>
+
+    <script>
+        // 初始化 Canvas
+        const sCanvas = document.getElementById('sensorCanvas');
+        const sCtx = sCanvas.getContext('2d');
+        const mCanvas = document.getElementById('servoCanvas');
+        const mCtx = mCanvas.getContext('2d');
+
+        // 状态变量
+        let boardAngle = 0; // 板子的实际物理角度 (-90 ~ 90)
+        let isDragging = false;
+        
+        // 物理常数模拟
+        const G_FORCE_RAW = 16384; // MPU6050 1g 的原始读数
+
+        // 交互事件监听
+        sCanvas.addEventListener('mousedown', () => isDragging = true);
+        window.addEventListener('mouseup', () => isDragging = false);
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const rect = sCanvas.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // 计算鼠标相对于中心的角度
+            const dx = mouseX - centerX;
+            const dy = mouseY - centerY;
+            let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            
+            // 限制一下角度，方便演示 (-90 ~ 90)
+            if (angle > 90) angle = 90;
+            if (angle < -90) angle = -90;
+            if (Math.abs(angle) > 90) { 
+               // 简单的处理逻辑，让操作更自然
+               if(dx < 0) angle = (angle > 0) ? 90 : -90; 
+            }
+            
+            boardAngle = angle;
+            updateSimulation();
+        });
+        
+        // 触摸支持
+        sCanvas.addEventListener('touchstart', (e) => { isDragging = true; e.preventDefault(); });
+        window.addEventListener('touchend', () => isDragging = false);
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const rect = sCanvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const dx = touch.clientX - rect.left - centerX;
+            const dy = touch.clientY - rect.top - centerY;
+            let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+            if (angle > 90) angle = 90;
+            if (angle < -90) angle = -90;
+            boardAngle = angle;
+            updateSimulation();
+        });
+
+        function drawArrow(ctx, fromX, fromY, toX, toY, color, width=2, text="") {
+            const headlen = 10;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.lineTo(toX, toY);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            if(text) {
+                ctx.fillStyle = color;
+                ctx.font = "14px Arial";
+                ctx.fillText(text, toX + 10, toY);
+            }
+        }
+
+        function updateSimulation() {
+            // --- 1. 计算模拟数据 ---
+            // 角度转弧度
+            const rad = boardAngle * Math.PI / 180;
+            
+            // 模拟 MPU6050 内部感受到的重力分量
+            // 当板子旋转时，重力矢量相对于板子坐标系的投影
+            // AX = g * sin(angle)
+            // AZ = g * cos(angle)
+            const rawAX = Math.sin(rad) * G_FORCE_RAW;
+            const rawAZ = Math.cos(rad) * G_FORCE_RAW;
+            
+            // 模拟 STM32 里的 atan2 计算
+            const calcPitch = Math.atan2(rawAX, rawAZ) * (180 / Math.PI);
+            
+            // 模拟 舵机目标角度 (自稳逻辑: 90 + Pitch)
+            // 这里我们为了视觉效果，让舵机反向转动以保持水平
+            // 如果板子向右倾斜(正)，舵机应该向左转(负方向修正)
+            let servoAngle = 90 - calcPitch; 
+            
+            // --- 2. 绘制传感器 (左图) ---
+            sCtx.clearRect(0, 0, 400, 400);
+            
+            sCtx.save();
+            sCtx.translate(200, 200);
+            
+            // 绘制背景坐标系 (世界坐标)
+            sCtx.strokeStyle = "#eee";
+            sCtx.beginPath(); sCtx.moveTo(0, -150); sCtx.lineTo(0, 150); sCtx.stroke();
+            sCtx.beginPath(); sCtx.moveTo(-150, 0); sCtx.lineTo(150, 0); sCtx.stroke();
+
+            // 旋转画布，模拟板子倾斜
+            sCtx.rotate(rad);
+            
+            // 绘制板子 (PCB)
+            sCtx.fillStyle = "#2196f3";
+            sCtx.fillRect(-100, -10, 200, 20);
+            sCtx.fillStyle = "white";
+            sCtx.font = "12px Arial";
+            sCtx.fillText("STM32 + MPU6050", -50, 5);
+
+            // 绘制板子自身的坐标轴 (Local Axis)
+            // X轴 (红)
+            drawArrow(sCtx, 0, 0, 120, 0, "rgba(255, 0, 0, 0.3)", 1, "Local X");
+            // Z轴 (蓝) - 注意 Z 轴是垂直于板子平面的
+            drawArrow(sCtx, 0, 0, 0, 120, "rgba(0, 0, 255, 0.3)", 1, "Local Z");
+
+            // --- 核心可视化：重力分解 ---
+            // 重力永远垂直向下 (世界坐标系的 0, 1)。
+            // 但我们需要把它画在旋转后的坐标系里，或者我们可以逆向思考。
+            // 为了直观，我们在旋转后的画布上，画一个反向旋转的重力矢量，这样重力看起来永远向下。
+            
+            sCtx.save();
+            sCtx.rotate(-rad); // 抵消旋转，保持重力垂直向下
+            // 绘制总重力 G (绿色)
+            drawArrow(sCtx, 0, 0, 0, 130, "#00cc00", 4, "G (重力)");
+            sCtx.restore();
+
+            // 绘制重力在板子坐标系上的投影 (这就是 AX 和 AZ 的由来!)
+            // AX 分量 (投影到板子X轴)
+            const pixelAX = Math.sin(rad) * 130;
+            const pixelAZ = Math.cos(rad) * 130;
+            
+            drawArrow(sCtx, 0, 0, pixelAX, 0, "#ff4444", 3, "AX");
+            drawArrow(sCtx, 0, 0, 0, pixelAZ, "#4444ff", 3, "AZ");
+            
+            // 画虚线辅助框
+            sCtx.setLineDash([5, 5]);
+            sCtx.strokeStyle = "#ccc";
+            sCtx.beginPath();
+            sCtx.moveTo(pixelAX, 0);
+            sCtx.lineTo(pixelAX, pixelAZ);
+            sCtx.lineTo(0, pixelAZ);
+            sCtx.stroke();
+            sCtx.setLineDash([]);
+
+            sCtx.restore(); // 结束传感器绘制
+
+            // --- 3. 绘制舵机 (右图) ---
+            mCtx.clearRect(0, 0, 300, 400);
+            mCtx.save();
+            mCtx.translate(150, 200); // 舵机中心
+
+            // 绘制舵机底座 (固定在板子上，随板子动)
+            mCtx.save();
+            mCtx.rotate(rad); // 底座随板子倾斜
+            mCtx.fillStyle = "#555";
+            mCtx.fillRect(-30, -20, 60, 40); // 舵机壳
+            mCtx.fillStyle = "#eee";
+            mCtx.fillText("舵机底座", -25, 5);
+            
+            // 绘制摇臂 (Servo Horn) - 它是我们要控制的对象
+            // 摇臂角度 = 舵机角度 (相对于底座)
+            // 我们希望摇臂保持水平，所以 摇臂绝对角度 = 板子角度 + 舵机相对角度
+            // 如果控制得当，摇臂绝对角度应该接近 0 (水平)
+            
+            // 绘制舵机轴
+            mCtx.fillStyle = "#333";
+            mCtx.beginPath(); mCtx.arc(0, 0, 10, 0, Math.PI*2); mCtx.fill();
+
+            // 旋转摇臂 (相对于底座)
+            // 注意：Canvas的旋转是累加的。当前坐标系已经随板子转了 rad。
+            // 舵机输出 servoAngle (比如 90度是中点)。
+            // 我们把 0度定义为摇臂垂直向左，180度垂直向右，90度垂直向上。
+            // 修正显示逻辑：Canvas 0度是向右(X轴)。
+            const servoRad = (servoAngle - 90) * Math.PI / 180; 
+            mCtx.rotate(servoRad); 
+            
+            // 画摇臂
+            mCtx.fillStyle = "#ff9800";
+            mCtx.fillRect(-5, -5, 80, 10); // 摇臂杆
+            
+            // 画个摄像头在摇臂上
+            mCtx.fillStyle = "#000";
+            mCtx.fillRect(60, -15, 20, 20); // 摄像头
+            mCtx.fillStyle = "#0f0";
+            mCtx.beginPath(); mCtx.arc(80, -5, 2, 0, Math.PI*2); mCtx.fill(); // 指示灯
+
+            // 辅助线：水平线
+            mCtx.restore(); // 恢复到底座旋转状态
+            mCtx.restore(); // 恢复到初始状态
+            
+            // 画一条绝对水平的虚线做参考
+            mCtx.strokeStyle = "#ddd";
+            mCtx.setLineDash([5, 5]);
+            mCtx.beginPath(); mCtx.moveTo(0, 200); mCtx.lineTo(300, 200); mCtx.stroke();
+
+
+            // --- 4. 更新数据面板 ---
+            document.getElementById('valAX').innerText = Math.round(rawAX);
+            document.getElementById('valAZ').innerText = Math.round(rawAZ);
+            document.getElementById('valPitch').innerText = calcPitch.toFixed(1) + "°";
+            document.getElementById('valServo').innerText = servoAngle.toFixed(1) + "°";
+            
+            // 计算 PWM CCR
+            const ccr = 500 + (servoAngle / 180 * 2000);
+            document.getElementById('valCCR').innerText = Math.round(ccr);
+            
+            let status = "平稳";
+            if (Math.abs(boardAngle) > 5) status = "倾斜";
+            document.getElementById('statusText').innerText = status;
+        }
+
+        // 启动第一帧
+        updateSimulation();
+
+    </script>
+</body>
+</html>

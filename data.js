@@ -48,7 +48,7 @@ const blogPosts = [
     },
     {
     id: 5,
-    title: "i++ & ++i 测试", // 标题可以用特殊符号，没关系
+    title: "i++ & ++i", // 标题可以用特殊符号，没关系
     date: "2024-06-02",
     category: "HTML实验室",
     summary: "这是一个直接嵌入的独立 HTML 作品。",
@@ -64,5 +64,59 @@ const blogPosts = [
             如果显示为空白，请检查文件名是否正确，或者该文件是否已上传到 GitHub 仓库根目录。
         </p>
     `
-  }
+    },
+    {id: 6,
+    title: "MPU6050加速度计原理可视化", // 标题可以用特殊符号，没关系
+    date: "2024-06-02",
+    category: "HTML实验室",
+    summary: "这是一个直接嵌入的独立 HTML 作品。",
+    // 👇 重点在这里：src 必须和您的文件名一模一样
+    content: `
+        <p>下面是直接嵌入的演示窗口：</p>
+        
+        <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
+            <iframe src="MPU6050加速度计原理可视化.html" class="w-full h-full border-0"></iframe>
+        </div>
+
+        <p class="mt-4 text-sm text-gray-400 text-center">
+            如果显示为空白，请检查文件名是否正确，或者该文件是否已上传到 GitHub 仓库根目录。
+        </p>
+    `
+    },
+    {id: 7,
+    title: "STM32单片机GPIO 模式可视化", // 标题可以用特殊符号，没关系
+    date: "2024-06-02",
+    category: "HTML实验室",
+    summary: "这是一个直接嵌入的独立 HTML 作品。",
+    // 👇 重点在这里：src 必须和您的文件名一模一样
+    content: `
+        <p>下面是直接嵌入的演示窗口：</p>
+        
+        <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
+            <iframe src="STM32单片机GPIO 模式可视化.html" class="w-full h-full border-0"></iframe>
+        </div>
+
+        <p class="mt-4 text-sm text-gray-400 text-center">
+            如果显示为空白，请检查文件名是否正确，或者该文件是否已上传到 GitHub 仓库根目录。
+        </p>
+    `
+    },
+    {id: 8,
+    title: "上下拉模式可视化原理", // 标题可以用特殊符号，没关系
+    date: "2024-06-02",
+    category: "HTML实验室",
+    summary: "这是一个直接嵌入的独立 HTML 作品。",
+    // 👇 重点在这里：src 必须和您的文件名一模一样
+    content: `
+        <p>下面是直接嵌入的演示窗口：</p>
+        
+        <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
+            <iframe src="上下拉模式可视化原理.html" class="w-full h-full border-0"></iframe>
+        </div>
+
+        <p class="mt-4 text-sm text-gray-400 text-center">
+            如果显示为空白，请检查文件名是否正确，或者该文件是否已上传到 GitHub 仓库根目录。
+        </p>
+    `
+    }
 ];
