@@ -1,0 +1,19 @@
+/* 动画效果 */
+.fade-in { animation: fadeIn 0.5s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Markdown 内容样式 (浅色模式) */
+.markdown-body p { margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+.markdown-body h2 { font-size: 1.5rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
+.markdown-body blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; color: #4b5563; font-style: italic; background: #f3f4f6; padding: 1rem; border-radius: 0.25rem; }
+.markdown-body pre { background: #1f2937; color: #e5e7eb; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
+.markdown-body code { font-family: monospace; }
+
+/* Markdown 内容样式 (深色模式适配) 🌙 */
+.dark .markdown-body p { color: #d1d5db; }
+.dark .markdown-body h2 { color: #f3f4f6; }
+.dark .markdown-body blockquote { color: #9ca3af; background: #374151; }
+
+/* 激活状态的按钮样式 (特定覆盖) */
+.filter-btn.active { background-color: #dbeafe; color: #1d4ed8; border-color: transparent; }
+.dark .filter-btn.active { background-color: #1e3a8a; color: #bfdbfe; }

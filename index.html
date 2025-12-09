@@ -3,38 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>薛某的博客</title>
-    <!-- 引入 Tailwind CSS 进行美化 -->
+    <title>薛某的个人博客</title>
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 引入图标库 -->
+    <!-- 配置 Tailwind 使用 class 模式启用暗黑模式 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- 引入 FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        /* 一些简单的自定义动画 */
-        .fade-in { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .markdown-body p { margin-bottom: 1rem; line-height: 1.75; color: #374151; }
-        .markdown-body h2 { font-size: 1.5rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
-        .markdown-body blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; color: #4b5563; font-style: italic; background: #f3f4f6; padding: 1rem; border-radius: 0.25rem; }
-        .markdown-body pre { background: #1f2937; color: #e5e7eb; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
-        .markdown-body code { font-family: monospace; }
-        
-        /* 激活状态的按钮样式 */
-        .filter-btn.active { background-color: #dbeafe; color: #1d4ed8; border-color: transparent; }
-    </style>
+    
+    <!-- 引入样式文件 -->
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-50 font-sans text-gray-800 min-h-screen flex flex-col">
+
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-300">
 
     <!-- 顶部导航栏 -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <nav class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center cursor-pointer" onclick="showHome()">
                     <i class="fa-solid fa-code text-blue-600 text-2xl mr-2"></i>
-                    <span class="font-bold text-xl tracking-tight text-gray-900">我的博客空间</span>
+                    <!-- 👇 这里已经修改为您的博客名 -->
+                    <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white">薛某的个人博客</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="https://github.com/xlx19" target="_blank" class="text-gray-500 hover:text-gray-900 transition"><i class="fa-brands fa-github text-xl"></i></a>
-                    <button onclick="alert('博主很懒，还没写关于页面！')" class="text-gray-500 hover:text-blue-600 transition font-medium">关于我</button>
+                    <!-- 夜间模式切换按钮 -->
+                    <button id="theme-toggle" class="p-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition">
+                        <i id="theme-icon" class="fas fa-moon"></i>
+                    </button>
+                    
+                    <a href="https://github.com/xlx19" target="_blank" class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition"><i class="fa-brands fa-github text-xl"></i></a>
+                    <button onclick="alert('博主很懒，还没写关于页面！')" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition font-medium">关于我</button>
                 </div>
             </div>
         </div>
@@ -43,7 +46,7 @@
     <!-- 主要内容区域 -->
     <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         
-        <!-- 首页：文章列表 (默认显示) -->
+        <!-- 首页视图 -->
         <div id="home-view" class="fade-in">
             <!-- 个人简介卡片 -->
             <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 mb-10 text-white shadow-lg">
@@ -54,232 +57,51 @@
                 </p>
             </div>
 
-            <!-- 分类标签 (已修改：增加了点击事件和 HTML实验室) -->
+            <!-- 分类标签 -->
             <div class="flex space-x-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-                <button onclick="filterPosts('全部', this)" class="filter-btn active px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 cursor-pointer whitespace-nowrap transition">全部</button>
-                <button onclick="filterPosts('技术笔记', this)" class="filter-btn px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 cursor-pointer whitespace-nowrap transition">技术笔记</button>
-                <button onclick="filterPosts('生活随笔', this)" class="filter-btn px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 cursor-pointer whitespace-nowrap transition">生活随笔</button>
-                <button onclick="filterPosts('HTML实验室', this)" class="filter-btn px-4 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 cursor-pointer whitespace-nowrap transition"><i class="fa-solid fa-flask mr-1"></i>HTML 实验室</button>
+                <button onclick="filterPosts('全部', this)" class="filter-btn active px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap transition border border-transparent bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">全部</button>
+                <button onclick="filterPosts('技术笔记', this)" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap transition border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">技术笔记</button>
+                <button onclick="filterPosts('生活随笔', this)" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap transition border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">生活随笔</button>
+                <button onclick="filterPosts('HTML实验室', this)" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap transition border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"><i class="fa-solid fa-flask mr-1"></i>HTML 实验室</button>
             </div>
 
             <!-- 文章列表容器 -->
-            <div id="posts-container" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                <!-- 文章卡片会通过 JavaScript 自动生成在这里 -->
-            </div>
+            <div id="posts-container" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3"></div>
 
             <!-- 空状态提示 -->
             <div id="empty-state" class="hidden text-center py-20">
-                <div class="text-gray-300 text-6xl mb-4"><i class="fa-regular fa-folder-open"></i></div>
-                <p class="text-gray-500 text-lg">这个分类下暂时没有内容哦</p>
+                <div class="text-gray-300 dark:text-gray-600 text-6xl mb-4"><i class="fa-regular fa-folder-open"></i></div>
+                <p class="text-gray-500 dark:text-gray-400 text-lg">这个分类下暂时没有内容哦</p>
             </div>
         </div>
 
-        <!-- 文章详情页 (默认隐藏) -->
+        <!-- 文章详情页 -->
         <div id="article-view" class="hidden fade-in">
-            <button onclick="showHome()" class="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition font-medium">
+            <button onclick="showHome()" class="mb-6 flex items-center text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition font-medium">
                 <i class="fa-solid fa-arrow-left mr-2"></i> 返回首页
             </button>
-            <article class="bg-white rounded-2xl shadow-sm p-8 md:p-12 border border-gray-100">
-                <div class="mb-8 border-b border-gray-100 pb-8">
-                    <div class="flex items-center text-sm text-gray-500 mb-3 space-x-4">
-                        <span id="article-date"><i class="far fa-calendar-alt mr-1"></i> 2023-10-24</span>
-                        <span id="article-category" class="px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-600">技术</span>
+            <article class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-8 md:p-12 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+                <div class="mb-8 border-b border-gray-100 dark:border-gray-700 pb-8">
+                    <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3 space-x-4">
+                        <span id="article-date"></span>
+                        <span id="article-category" class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-300"></span>
                     </div>
-                    <h1 id="article-title" class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">文章标题加载中...</h1>
+                    <h1 id="article-title" class="text-3xl md:text-4xl font-extrabold text-gray-900 dark:text-white leading-tight"></h1>
                 </div>
-                <!-- 文章正文 -->
-                <div id="article-content" class="markdown-body text-lg">
-                    内容加载中...
-                </div>
+                <!-- 文章内容容器 -->
+                <div id="article-content" class="markdown-body text-lg"></div>
             </article>
         </div>
 
     </main>
 
-    <!-- 底部 -->
-    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
-        <div class="max-w-5xl mx-auto px-4 text-center text-gray-500 text-sm">
-            <p>&copy; 2024 xlx19. All rights reserved.</p>
-            <p class="mt-2">Powered by Cloudflare Pages</p>
-        </div>
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12 py-8 text-center text-gray-500 dark:text-gray-400 text-sm transition-colors duration-300">
+        <p>&copy; 2024 xlx19. All rights reserved. | Powered by Cloudflare Pages</p>
     </footer>
 
-    <!-- 逻辑脚本 -->
-    <script>
-        // ==========================================
-        //         👇 在这里修改你的文章数据 👇
-        // ==========================================
-        const blogPosts = [
-            {
-                id: 1,
-                title: "Hello World: 成功将博客部署到 Cloudflare Pages",
-                date: "2024-05-20",
-                category: "技术笔记", // 修改分类以匹配按钮
-                summary: "终于完成了博客的迁移！这篇文章记录了我如何使用 Cloudflare Pages 托管静态网站，简直太快、太方便了。",
-                content: `
-                    <p>大家好！这是我的第一篇博客文章。</p>
-                    <p>当你看到这个页面时，说明我已经成功学会了如何使用 GitHub 和 Cloudflare Pages 来搭建网站。</p>
-                    <h2>为什么选择 Cloudflare Pages？</h2>
-                    <p>因为它完全免费，而且速度非常快。对于像我这样的初学者来说，不需要购买服务器，只要有代码就能跑起来。</p>
-                `
-            },
-            {
-                id: 2,
-                title: "Cloudflare 部署避坑指南",
-                date: "2024-05-21",
-                category: "技术笔记",
-                summary: "在连接 Git 的时候遇到了很多选项不知道怎么填？Framework preset 到底选什么？这篇文章告诉你答案。",
-                content: `
-                    <p>今天在部署的时候卡了一会儿，主要是构建配置（Build Settings）那里。</p>
-                    <h2>关键点</h2>
-                    <p>如果你也是像我一样手写的 HTML 静态页面，切记：</p>
-                    <p>1. <b>Framework preset</b> 选 None。</p>
-                    <p>2. <b>Build command</b> 留空。</p>
-                    <p>3. <b>Output directory</b> 留空。</p>
-                `
-            },
-            {
-                id: 3,
-                title: "我的未来学习计划",
-                date: "2024-05-22",
-                category: "生活随笔", // 修改分类以匹配按钮
-                summary: "有了博客只是第一步，接下来我要通过这个平台督促自己坚持学习。",
-                content: `
-                    <p>立个 Flag，接下来我要系统性地学习以下内容：</p>
-                    <p>- 深入理解 HTML5 和 CSS3</p>
-                    <p>- JavaScript 基础语法</p>
-                    <p>- 尝试写一个简单的 Web 小游戏</p>
-                    <p>加油！</p>
-                `
-            },
-            {
-                id: 4,
-                title: "HTML 实验室：测试我的第一个代码块",
-                date: "2024-05-23",
-                category: "HTML实验室", // 新增分类
-                summary: "这是一个专门用来测试 HTML 特性的区域。今天我们来试着写一段跑马灯代码。",
-                content: `
-                    <p>欢迎来到 HTML 实验室！这里我会放一些好玩的代码片段。</p>
-                    <h2>跑马灯测试</h2>
-                    <div style="background: #000; color: #0f0; padding: 10px; border-radius: 5px; font-family: monospace;">
-                        <marquee>系统启动中... Loading HTML Lab... 进度 99%</marquee>
-                    </div>
-                    <br>
-                    <p>虽然 <code style="background:#eee; padding:2px 4px;">&lt;marquee&gt;</code> 标签已经过时了，但用来做复古效果还是很有趣的！</p>
-                `
-            }
-        ];
-        // ==========================================
-        //         👆 修改结束 👆
-        // ==========================================
+    <!-- 脚本引入：顺序很重要，先引入数据，再引入逻辑 -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
 
-        const homeView = document.getElementById('home-view');
-        const articleView = document.getElementById('article-view');
-        const postsContainer = document.getElementById('posts-container');
-        const emptyState = document.getElementById('empty-state');
-        
-        // 初始化
-        function init() {
-            renderPosts(blogPosts); // 默认显示所有文章
-            
-            // 浏览器后退处理
-            window.onpopstate = function(event) {
-                if (event.state && event.state.page === 'article') {
-                    openArticle(event.state.id, false);
-                } else {
-                    showHome(false);
-                }
-            };
-        }
-
-        // 核心：筛选文章函数
-        function filterPosts(category, btnElement) {
-            // 1. 更新按钮样式
-            const buttons = document.querySelectorAll('.filter-btn');
-            buttons.forEach(btn => {
-                btn.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'border-transparent');
-                btn.classList.add('bg-white', 'text-gray-600', 'border-gray-200');
-            });
-            // 激活当前点击的按钮
-            btnElement.classList.remove('bg-white', 'text-gray-600', 'border-gray-200');
-            btnElement.classList.add('active', 'bg-blue-100', 'text-blue-700', 'border-transparent');
-
-            // 2. 筛选数据
-            if (category === '全部') {
-                renderPosts(blogPosts);
-            } else {
-                const filtered = blogPosts.filter(post => post.category === category);
-                renderPosts(filtered);
-            }
-        }
-
-        // 渲染文章卡片 (接收一个文章数组作为参数)
-        function renderPosts(posts) {
-            if (posts.length === 0) {
-                postsContainer.innerHTML = '';
-                postsContainer.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                return;
-            }
-
-            postsContainer.classList.remove('hidden');
-            emptyState.classList.add('hidden');
-
-            postsContainer.innerHTML = posts.map(post => `
-                <div onclick="openArticle(${post.id})" class="bg-white rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 overflow-hidden group flex flex-col h-full">
-                    <div class="p-6 flex flex-col flex-grow">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">${post.category}</span>
-                            <span class="text-xs text-gray-400">${post.date}</span>
-                        </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition">${post.title}</h3>
-                        <p class="text-gray-600 text-sm line-clamp-3 mb-4 flex-grow">${post.summary}</p>
-                        <div class="text-blue-600 text-sm font-medium mt-auto group-hover:translate-x-1 transition-transform inline-block">
-                            阅读全文 <i class="fa-solid fa-arrow-right ml-1"></i>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function openArticle(id, pushState = true) {
-            const post = blogPosts.find(p => p.id === id);
-            if (!post) return;
-
-            document.getElementById('article-title').innerText = post.title;
-            document.getElementById('article-date').innerHTML = `<i class="far fa-calendar-alt mr-1"></i> ${post.date}`;
-            document.getElementById('article-category').innerText = post.category;
-            document.getElementById('article-content').innerHTML = post.content;
-
-            homeView.classList.add('hidden');
-            articleView.classList.remove('hidden');
-            window.scrollTo(0, 0);
-
-            if (pushState) {
-                try {
-                    history.pushState({ page: 'article', id: id }, null, `?p=${id}`);
-                } catch (e) { console.log("预览模式不更新 URL"); }
-            }
-        }
-
-        function showHome(pushState = true) {
-            articleView.classList.add('hidden');
-            homeView.classList.remove('hidden');
-            window.scrollTo(0, 0);
-
-            if (pushState) {
-                try {
-                    history.pushState({ page: 'home' }, null, window.location.pathname);
-                } catch (e) { console.log("预览模式不更新 URL"); }
-            }
-        }
-
-        try {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('p')) openArticle(parseInt(urlParams.get('p')), false);
-        } catch (e) {}
-
-        init();
-    </script>
 </body>
 </html>
