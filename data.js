@@ -45,7 +45,7 @@ const blogPosts = [
                 <marquee>系统启动中... Loading HTML Lab... 进度 99%</marquee>
             </div>
         `
-    }
+    },
     {
         id: 5,
         title: "i++ & ++i", 
