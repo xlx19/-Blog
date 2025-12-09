@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上拉/下拉电阻原理演示</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8; }
+        .wire { transition: all 0.3s; stroke-linecap: round; stroke-linejoin: round; }
+        .component-fade { transition: opacity 0.5s; }
+        .electron-flow {
+            stroke-dasharray: 8;
+            animation: dash 1s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: -16; }
+        }
+        /* Custom Scrollbar for the log */
+        .scroller::-webkit-scrollbar { width: 6px; }
+        .scroller::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const App = () => {
+            // Modes: 'pull-up', 'pull-down', 'floating'
+            const [mode, setMode] = useState('pull-up');
+            const [isButtonPressed, setIsButtonPressed] = useState(false);
+            const [voltageHistory, setVoltageHistory] = useState(new Array(50).fill(3.3));
+            
+            // Simulation Loop
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    let newVoltage = 0;
+                    
+                    if (mode === 'floating') {
+                        // Floating: if button connected to GND is pressed -> 0V. 
+                        // If not pressed -> Random Noise (0.5V - 2.5V) simulates electromagnetic interference
+                        if (isButtonPressed) {
+                            newVoltage = 0; // Hard grounded
+                        } else {
+                            // Simulating floating noise
+                            const noise = Math.random() * 2.0 + 0.5; 
+                            newVoltage = noise;
+                        }
+                    } else if (mode === 'pull-up') {
+                        // Pull-up: Default High (3.3V), Pressed -> Low (0V)
+                        newVoltage = isButtonPressed ? 0 : 3.3;
+                    } else if (mode === 'pull-down') {
+                        // Pull-down: Default Low (0V), Pressed -> High (3.3V)
+                        newVoltage = isButtonPressed ? 3.3 : 0;
+                    }
+
+                    setVoltageHistory(prev => [...prev.slice(1), newVoltage]);
+                }, 50); // 20fps update
+
+                return () => clearInterval(interval);
+            }, [mode, isButtonPressed]);
+
+            // Helper to get logic level text
+            const getLogicLevel = (v) => {
+                if (v > 2.0) return "High (1)";
+                if (v < 0.8) return "Low (0)";
+                return "Unknown (?)";
+            };
+
+            const currentVoltage = voltageHistory[voltageHistory.length - 1];
+            const logicText = getLogicLevel(currentVoltage);
+
+            // Path Generators
+            const getWireColor = (voltage) => {
+                if (voltage > 2.0) return '#ef4444'; // Red
+                if (voltage < 0.8) return '#3b82f6'; // Blue
+                return '#a8a29e'; // Grey (Noise)
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col items-center p-4">
+                    <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">上拉电阻 & 下拉电阻 可视化</h1>
+                    <p className="text-gray-600 mb-6 text-center max-w-2xl text-sm md:text-base">
+                        电阻就像弹簧，将不确定的电压“拉”到固定的高电平（VCC）或“拉”到固定的低电平（GND）。
+                        <br/>防止引脚悬空时因静电干扰产生误动作。
+                    </p>
+
+                    <div className="flex flex-col lg:flex-row gap-6 w-full max-w-6xl">
+                        
+                        {/* LEFT: Controls & Circuit */}
+                        <div className="flex-1 bg-white p-6 rounded-xl shadow-lg flex flex-col items-center">
+                            
+                            {/* Mode Tabs */}
+                            <div className="flex bg-gray-100 p-1 rounded-lg mb-6 w-full">
+                                <button 
+                                    onClick={() => { setMode('pull-up'); setIsButtonPressed(false); }}
+                                    className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${mode === 'pull-up' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    上拉模式 (常用)
+                                </button>
+                                <button 
+                                    onClick={() => { setMode('pull-down'); setIsButtonPressed(false); }}
+                                    className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${mode === 'pull-down' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    下拉模式
+                                </button>
+                                <button 
+                                    onClick={() => { setMode('floating'); setIsButtonPressed(false); }}
+                                    className={`flex-1 py-2 rounded-md text-sm font-bold transition-all ${mode === 'floating' ? 'bg-white text-gray-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    悬空 (危险!)
+                                </button>
+                            </div>
+
+                            {/* Circuit SVG */}
+                            <div className="relative w-full aspect-[4/3] max-w-md border border-gray-100 rounded-lg bg-gray-50">
+                                <svg width="100%" height="100%" viewBox="0 0 400 300" className="w-full h-full">
+                                    <defs>
+                                        <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                                            <path d="M0,0 L10,5 L0,10" fill="#999" />
+                                        </marker>
+                                    </defs>
+
+                                    {/* --- Common Elements --- */}
+                                    {/* MCU Chip */}
+                                    <rect x="280" y="50" width="100" height="200" rx="4" fill="#333" />
+                                    <text x="330" y="150" fill="white" textAnchor="middle" fontWeight="bold">MCU</text>
+                                    <text x="330" y="170" fill="#aaa" textAnchor="middle" fontSize="12">GPIO Input</text>
+                                    
+                                    {/* Pin Terminal */}
+                                    <circle cx="280" cy="150" r="5" fill="#999" />
+                                    <text x="290" y="145" fill="white" fontSize="10">Pin</text>
+
+                                    {/* Main Wire to Pin */}
+                                    <line x1="150" y1="150" x2="280" y2="150" stroke={getWireColor(currentVoltage)} strokeWidth="4" />
+
+                                    {/* --- SCENARIO 1 & 3: Pull-Up & Floating (Button connects to GND) --- */}
+                                    {(mode === 'pull-up' || mode === 'floating') && (
+                                        <g>
+                                            {/* VCC Rail */}
+                                            <text x="130" y="30" fill="#ef4444" fontWeight="bold">VCC (3.3V)</text>
+                                            
+                                            {/* Resistor (Only in Pull-up) */}
+                                            {mode === 'pull-up' && (
+                                                <g>
+                                                    <line x1="150" y1="40" x2="150" y2="80" stroke="#ef4444" strokeWidth="3" />
+                                                    <rect x="140" y="80" width="20" height="40" fill="#fff" stroke="#333" strokeWidth="2" />
+                                                    <text x="170" y="105" fontSize="12" fill="#666">R (10kΩ)</text>
+                                                    <line x1="150" y1="120" x2="150" y2="150" stroke={getWireColor(currentVoltage)} strokeWidth="3" />
+                                                    
+                                                    {/* Current Flow Animation (VCC to Pin when button open) */}
+                                                    {!isButtonPressed && (
+                                                        <line x1="150" y1="40" x2="150" y2="150" stroke="rgba(255,255,0,0.5)" strokeWidth="4" className="electron-flow" />
+                                                    )}
+                                                </g>
+                                            )}
+
+                                            {/* Button to GND */}
+                                            <line x1="150" y1="150" x2="150" y2="200" stroke={isButtonPressed ? '#3b82f6' : getWireColor(currentVoltage)} strokeWidth="3" />
+                                            
+                                            {/* Button Switch */}
+                                            <circle cx="150" cy="200" r="3" fill="#333"/>
+                                            <circle cx="150" cy="240" r="3" fill="#333"/>
+                                            <line 
+                                                x1="150" y1="200" x2="150" y2="240" 
+                                                stroke="#333" strokeWidth="3"
+                                                transform={isButtonPressed ? "rotate(0, 150, 200)" : "rotate(-30, 150, 200)"}
+                                                className="transition-transform duration-100 origin-top"
+                                            />
+
+                                            <line x1="150" y1="240" x2="150" y2="270" stroke="#3b82f6" strokeWidth="3" />
+                                            <line x1="120" y1="270" x2="180" y2="270" stroke="#3b82f6" strokeWidth="3" />
+                                            <text x="130" y="285" fill="#3b82f6" fontWeight="bold">GND</text>
+
+                                            {/* Current Flow to GND when Pressed */}
+                                            {isButtonPressed && (
+                                                <g>
+                                                    <line x1="150" y1="200" x2="150" y2="270" stroke="rgba(0,100,255,0.5)" strokeWidth="4" className="electron-flow" />
+                                                    {mode === 'pull-up' && <line x1="150" y1="40" x2="150" y2="270" stroke="rgba(255,0,0,0.3)" strokeWidth="6" className="electron-flow" opacity="0.5" />} 
+                                                </g>
+                                            )}
+                                        </g>
+                                    )}
+
+                                    {/* --- SCENARIO 2: Pull-Down (Button connects to VCC) --- */}
+                                    {mode === 'pull-down' && (
+                                        <g>
+                                            {/* VCC Rail & Button */}
+                                            <text x="130" y="30" fill="#ef4444" fontWeight="bold">VCC (3.3V)</text>
+                                            <line x1="150" y1="40" x2="150" y2="70" stroke="#ef4444" strokeWidth="3" />
+                                            
+                                            {/* Button Switch */}
+                                            <circle cx="150" cy="70" r="3" fill="#333"/>
+                                            <circle cx="150" cy="110" r="3" fill="#333"/>
+                                            <line 
+                                                x1="150" y1="70" x2="150" y2="110" 
+                                                stroke="#333" strokeWidth="3"
+                                                transform={isButtonPressed ? "rotate(0, 150, 70)" : "rotate(-30, 150, 70)"}
+                                                className="transition-transform duration-100 origin-top"
+                                            />
+                                            
+                                            <line x1="150" y1="110" x2="150" y2="150" stroke={isButtonPressed ? '#ef4444' : '#3b82f6'} strokeWidth="3" />
+
+                                            {/* Resistor to GND */}
+                                            <line x1="150" y1="150" x2="150" y2="190" stroke="#3b82f6" strokeWidth="3" />
+                                            <rect x="140" y="190" width="20" height="40" fill="#fff" stroke="#333" strokeWidth="2" />
+                                            <text x="170" y="215" fontSize="12" fill="#666">R (10kΩ)</text>
+                                            <line x1="150" y1="230" x2="150" y2="270" stroke="#3b82f6" strokeWidth="3" />
+                                            <line x1="120" y1="270" x2="180" y2="270" stroke="#3b82f6" strokeWidth="3" />
+                                            <text x="130" y="285" fill="#3b82f6" fontWeight="bold">GND</text>
+
+                                            {/* Current Flow Animation */}
+                                            {isButtonPressed ? (
+                                                // Pressed: Current flows from VCC to Pin (and some to GND through R)
+                                                <line x1="150" y1="40" x2="150" y2="150" stroke="rgba(255,0,0,0.5)" strokeWidth="4" className="electron-flow" />
+                                            ) : (
+                                                // Not Pressed: Pin connected to GND through R
+                                                <line x1="150" y1="150" x2="150" y2="270" stroke="rgba(0,100,255,0.5)" strokeWidth="4" className="electron-flow" />
+                                            )}
+                                        </g>
+                                    )}
+
+                                    {/* Ghost Hand for Interaction Hint */}
+                                    <g transform="translate(80, 200)" className="pointer-events-none opacity-50">
+                                        <text x="0" y="0" fontSize="20">👈</text>
+                                    </g>
+                                </svg>
+                                
+                                <button 
+                                    onMouseDown={() => setIsButtonPressed(true)}
+                                    onMouseUp={() => setIsButtonPressed(false)}
+                                    onTouchStart={() => setIsButtonPressed(true)}
+                                    onTouchEnd={() => setIsButtonPressed(false)}
+                                    className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 px-8 py-3 rounded-full shadow-lg font-bold text-white active:scale-95 transition-all select-none ${isButtonPressed ? 'bg-indigo-600 scale-95' : 'bg-indigo-500 hover:bg-indigo-600'}`}
+                                >
+                                    {isButtonPressed ? '松开按键' : '按住按键'}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* RIGHT: Oscilloscope & Explanation */}
+                        <div className="flex-1 flex flex-col gap-6">
+                            
+                            {/* Oscilloscope */}
+                            <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-700">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-green-400 font-mono text-sm">OSCILLOSCOPE (GPIO VOLTAGE)</h3>
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-3 h-3 rounded-full ${currentVoltage > 2.0 ? 'bg-red-500' : currentVoltage < 0.8 ? 'bg-blue-500' : 'bg-gray-500 animate-pulse'}`}></div>
+                                        <span className="text-white font-mono">{currentVoltage.toFixed(2)}V</span>
+                                        <span className="text-gray-400 font-mono text-xs">[{logicText}]</span>
+                                    </div>
+                                </div>
+                                <div className="relative h-40 bg-black rounded border border-gray-800 overflow-hidden">
+                                    {/* Grid Lines */}
+                                    <div className="absolute top-1/4 w-full h-px bg-gray-800 opacity-50"></div>
+                                    <div className="absolute top-2/4 w-full h-px bg-gray-800 opacity-50"></div>
+                                    <div className="absolute top-3/4 w-full h-px bg-gray-800 opacity-50"></div>
+                                    
+                                    {/* SVG Graph */}
+                                    <svg className="w-full h-full" preserveAspectRatio="none">
+                                        <polyline 
+                                            fill="none" 
+                                            stroke="#0f0" 
+                                            strokeWidth="2"
+                                            points={voltageHistory.map((v, i) => {
+                                                const x = (i / (voltageHistory.length - 1)) * 100 + "%";
+                                                const y = (1 - (v / 3.5)) * 100 + "%"; // Scale 0-3.5V to 0-100%
+                                                return `${x},${y}`;
+                                            }).join(' ')}
+                                        />
+                                    </svg>
+                                </div>
+                                <p className="text-gray-500 text-xs mt-2 font-mono">
+                                    {mode === 'floating' 
+                                        ? "⚠️ WARNING: Signal Floating! High noise detected." 
+                                        : "✓ Signal Stable."}
+                                </p>
+                            </div>
+
+                            {/* Explanation Cards */}
+                            <div className="bg-white rounded-xl shadow p-5 border-l-4 border-yellow-400">
+                                <h3 className="font-bold text-gray-800 mb-2">当前模式解析</h3>
+                                {mode === 'pull-up' && (
+                                    <div className="text-sm text-gray-700 space-y-2">
+                                        <p><strong>上拉电阻 (Pull-up):</strong> 电阻连接在 VCC 和引脚之间。</p>
+                                        <ul className="list-disc pl-5">
+                                            <li><strong>按键松开时：</strong>电流通过电阻流向引脚，引脚被“拉”到高电平 (3.3V)。虽然电阻限流，但对于检测电压的引脚来说，电位就是高的。</li>
+                                            <li><strong>按键按下时：</strong>引脚直接接地。电流会从VCC经过电阻流向地（而不是引脚），引脚检测到低电平 (0V)。</li>
+                                            <li><strong>用途：</strong>90%的按键、I2C总线、复位引脚都用这种接法。</li>
+                                        </ul>
+                                    </div>
+                                )}
+                                {mode === 'pull-down' && (
+                                    <div className="text-sm text-gray-700 space-y-2">
+                                        <p><strong>下拉电阻 (Pull-down):</strong> 电阻连接在 GND 和引脚之间。</p>
+                                        <ul className="list-disc pl-5">
+                                            <li><strong>按键松开时：</strong>引脚通过电阻接地，被“拉”到低电平 (0V)。</li>
+                                            <li><strong>按键按下时：</strong>引脚直接接VCC，变为高电平 (3.3V)。</li>
+                                            <li><strong>用途：</strong>部分特殊的信号检测。如果不确定，一般首选上拉模式。</li>
+                                        </ul>
+                                    </div>
+                                )}
+                                {mode === 'floating' && (
+                                    <div className="text-sm text-gray-700 space-y-2">
+                                        <p className="text-red-600 font-bold">⚠️ 悬空 (Floating)</p>
+                                        <p>此时没有电阻。按键松开时，引脚既不连VCC也不连GND。</p>
+                                        <p>你可以看到示波器上的波形在乱跳。这是因为空气中的电磁波、静电、手指的感应电压都会影响引脚，导致单片机可能读出1，也可能读出0，程序会完全乱套。</p>
+                                        <p className="bg-red-50 p-2 rounded text-red-700">结论：输入引脚永远不要悬空！</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
