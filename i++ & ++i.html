@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C语言自增演示: i++ vs ++i</title>
+    <!-- 引入 Tailwind CSS 用于样式 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React 和 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- 引入 Babel 用于解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background-color: #f9fafb; }
+        /* 简单的加载动画 */
+        .loading { display: flex; justify-content: center; align-items: center; height: 100vh; color: #666; }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading">正在加载演示...</div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // 内置图标组件 (替换 lucide-react 以减少依赖)
+        const Icons = {
+            Play: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            ),
+            RotateCcw: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12"></path><path d="M3 3v9h9"></path></svg>
+            ),
+            ChevronRight: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m9 18 6-6-6-6"></path></svg>
+            ),
+            CheckCircle2: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+            ),
+            AlertCircle: ({ size = 24, className = "" }) => (
+                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="8" y2="12"></line><line x1="12" x2="12.01" y1="16" y2="16"></line></svg>
+            )
+        };
+
+        const App = () => {
+            const [mode, setMode] = useState('assignment'); 
+            const [subMode, setSubMode] = useState('post'); 
+            const [step, setStep] = useState(0);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [vars, setVars] = useState({ i: 0, a: 0, output: [] });
+
+            const scenarios = {
+                assignment: {
+                    post: {
+                        title: "后置自增 (i++) 赋值",
+                        code: [ "int i = 5;", "int a = i++; // 先赋值，后加1", "printf(\"i=%d, a=%d\", i, a);" ],
+                        steps: [
+                            { line: 0, desc: "初始化变量 i 为 5", action: () => setVars({ i: 5, a: 0, output: [] }) },
+                            { line: 1, desc: "【关键】取出 i 的旧值 (5) 准备赋值给 a", action: () => setVars(v => ({ ...v })) },
+                            { line: 1, desc: "执行 i 自增，i 变成了 6", action: () => setVars(v => ({ ...v, i: 6 })) },
+                            { line: 1, desc: "将取出的旧值 (5) 赋给 a", action: () => setVars(v => ({ ...v, a: 5 })) },
+                            { line: 2, desc: "输出结果", action: () => setVars(v => ({ ...v, output: [`i=${v.i}, a=${v.a}`] })) }
+                        ]
+                    },
+                    pre: {
+                        title: "前置自增 (++i) 赋值",
+                        code: [ "int i = 5;", "int a = ++i; // 先加1，后赋值", "printf(\"i=%d, a=%d\", i, a);" ],
+                        steps: [
+                            { line: 0, desc: "初始化变量 i 为 5", action: () => setVars({ i: 5, a: 0, output: [] }) },
+                            { line: 1, desc: "【关键】执行 i 自增，i 变成了 6", action: () => setVars(v => ({ ...v, i: 6 })) },
+                            { line: 1, desc: "取出 i 的新值 (6) 准备赋值给 a", action: () => setVars(v => ({ ...v })) },
+                            { line: 1, desc: "将新值 (6) 赋给 a", action: () => setVars(v => ({ ...v, a: 6 })) },
+                            { line: 2, desc: "输出结果", action: () => setVars(v => ({ ...v, output: [`i=${v.i}, a=${v.a}`] })) }
+                        ]
+                    }
+                },
+                loop: {
+                    post: {
+                        title: "For 循环中的 i++",
+                        code: [ "for (int i = 0; i < 3; i++) {", "  printf(\"%d \", i);", "}" ],
+                        steps: [
+                            { line: 0, desc: "初始化 i = 0", action: () => setVars({ i: 0, output: [] }) },
+                            { line: 0, desc: "判断 0 < 3 (真)", action: () => {} },
+                            { line: 1, desc: "执行循环体：打印 0", action: () => setVars(v => ({ ...v, output: [...v.output, 0] })) },
+                            { line: 0, desc: "执行 i++ (i 变为 1)", action: () => setVars(v => ({ ...v, i: 1 })) },
+                            { line: 0, desc: "判断 1 < 3 (真)", action: () => {} },
+                            { line: 1, desc: "执行循环体：打印 1", action: () => setVars(v => ({ ...v, output: [...v.output, 1] })) },
+                            { line: 0, desc: "执行 i++ (i 变为 2)", action: () => setVars(v => ({ ...v, i: 2 })) },
+                            { line: 0, desc: "判断 2 < 3 (真)", action: () => {} },
+                            { line: 1, desc: "执行循环体：打印 2", action: () => setVars(v => ({ ...v, output: [...v.output, 2] })) },
+                            { line: 0, desc: "执行 i++ (i 变为 3)", action: () => setVars(v => ({ ...v, i: 3 })) },
+                            { line: 0, desc: "判断 3 < 3 (假)，退出循环", action: () => {} }
+                        ]
+                    },
+                    pre: {
+                        title: "For 循环中的 ++i",
+                        code: [ "for (int i = 0; i < 3; ++i) {", "  printf(\"%d \", i);", "}" ],
+                        steps: [
+                            { line: 0, desc: "初始化 i = 0", action: () => setVars({ i: 0, output: [] }) },
+                            { line: 0, desc: "判断 0 < 3 (真)", action: () => {} },
+                            { line: 1, desc: "执行循环体：打印 0", action: () => setVars(v => ({ ...v, output: [...v.output, 0] })) },
+                            { line: 0, desc: "执行 ++i (i 变为 1)", action: () => setVars(v => ({ ...v, i: 1 })) },
+                            { line: 0, desc: "判断 1 < 3 (真)", action: () => {} },
+                            { line: 1, desc: "执行循环体：打印 1", action: () => setVars(v => ({ ...v, output: [...v.output, 1] })) },
+                            { line: 0, desc: "执行 ++i (i 变为 2)", action: () => setVars(v => ({ ...v, i: 2 })) },
+                            { line: 0, desc: "判断 2 < 3 (真)", action: () => {} },
+                            { line: 1, desc: "执行循环体：打印 2", action: () => setVars(v => ({ ...v, output: [...v.output, 2] })) },
+                            { line: 0, desc: "执行 ++i (i 变为 3)", action: () => setVars(v => ({ ...v, i: 3 })) },
+                            { line: 0, desc: "判断 3 < 3 (假)，退出循环", action: () => {} }
+                        ]
+                    }
+                }
+            };
+
+            const currentScenario = scenarios[mode][subMode];
+            const maxSteps = currentScenario.steps.length;
+            const currentStepData = currentScenario.steps[step] || currentScenario.steps[0];
+
+            useEffect(() => {
+                const initialAction = currentScenario.steps[0].action;
+                if (initialAction) initialAction();
+            }, [mode, subMode]);
+
+            useEffect(() => {
+                let timer;
+                if (isPlaying && step < maxSteps - 1) {
+                    timer = setTimeout(() => handleNext(), 1500);
+                } else if (step >= maxSteps - 1) {
+                    setIsPlaying(false);
+                }
+                return () => clearTimeout(timer);
+            }, [isPlaying, step, maxSteps]);
+
+            const handleNext = () => {
+                if (step < maxSteps - 1) {
+                    const nextStep = step + 1;
+                    setStep(nextStep);
+                    const action = currentScenario.steps[nextStep]?.action;
+                    if (action) action();
+                }
+            };
+
+            const handleReset = () => {
+                setStep(0);
+                setIsPlaying(false);
+                currentScenario.steps[0].action();
+            };
+
+            const handleSwitchMode = (newMode) => {
+                setMode(newMode);
+                setStep(0);
+                setIsPlaying(false);
+            };
+
+            const handleSwitchSubMode = (newSubMode) => {
+                setSubMode(newSubMode);
+                setStep(0);
+                setIsPlaying(false);
+            };
+
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 font-sans text-slate-800">
+                    <div className="max-w-4xl w-full bg-white rounded-xl shadow-xl overflow-hidden">
+                        
+                        {/* Header */}
+                        <div className="bg-slate-800 p-6 text-white">
+                            <h1 className="text-2xl font-bold flex items-center gap-2">
+                                C语言自增演示: i++ vs ++i
+                            </h1>
+                            <p className="text-slate-400 mt-2 text-sm">选择不同的场景来观察内存和执行顺序的变化。</p>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="p-6 border-b border-gray-100 flex flex-wrap gap-4 items-center justify-between">
+                            <div className="flex gap-2">
+                                <button onClick={() => handleSwitchMode('assignment')} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mode === 'assignment' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                                    1. 赋值时的区别 (重要)
+                                </button>
+                                <button onClick={() => handleSwitchMode('loop')} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${mode === 'loop' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                                    2. For 循环中的对比 (无区别)
+                                </button>
+                            </div>
+
+                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                                <button onClick={() => handleSwitchSubMode('post')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${subMode === 'post' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>
+                                    i++ (后置)
+                                </button>
+                                <button onClick={() => handleSwitchSubMode('pre')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${subMode === 'pre' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>
+                                    ++i (前置)
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Main Content Area */}
+                        <div className="flex flex-col md:flex-row">
+                            {/* Left: Code Visualization */}
+                            <div className="flex-1 p-6 bg-slate-900 overflow-x-auto">
+                                <h3 className="text-slate-400 text-xs uppercase tracking-wider mb-4 font-semibold">Code Execution</h3>
+                                <div className="font-mono text-sm leading-8">
+                                    {currentScenario.code.map((line, idx) => (
+                                        <div key={idx} className={`px-4 py-1 rounded transition-colors duration-300 ${currentStepData && currentStepData.line === idx ? 'bg-blue-500/30 text-white border-l-4 border-blue-500' : 'text-slate-400'}`}>
+                                            {line}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-8 bg-black/30 p-4 rounded-lg border border-white/10">
+                                    <div className="text-xs text-slate-400 mb-2">OUTPUT (终端输出)</div>
+                                    <div className="font-mono text-green-400 min-h-[1.5em]">{vars.output.join(' ')}<span className="animate-pulse">_</span></div>
+                                </div>
+                            </div>
+
+                            {/* Right: Memory & Explanation */}
+                            <div className="flex-1 p-6 bg-gray-50 flex flex-col">
+                                <h3 className="text-gray-500 text-xs uppercase tracking-wider mb-4 font-semibold">Memory & State</h3>
+                                {/* Variable Boxes */}
+                                <div className="flex gap-8 mb-8 justify-center">
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-20 h-20 bg-white border-2 border-blue-200 rounded-xl shadow-sm flex items-center justify-center text-3xl font-bold text-blue-600 relative overflow-hidden">
+                                            {vars.i}<div className="absolute top-1 left-2 text-xs text-gray-400">int i</div>
+                                        </div>
+                                    </div>
+                                    {mode === 'assignment' && (
+                                        <div className="flex flex-col items-center">
+                                            <div className={`w-20 h-20 bg-white border-2 rounded-xl shadow-sm flex items-center justify-center text-3xl font-bold relative overflow-hidden transition-colors ${vars.a !== 0 ? 'border-green-400 text-green-600' : 'border-gray-200 text-gray-300'}`}>
+                                                {vars.a}<div className="absolute top-1 left-2 text-xs text-gray-400">int a</div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Explanation Box */}
+                                <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm mb-6 flex-grow">
+                                    <div className="flex items-start gap-3">
+                                        <div className="mt-1">
+                                            {mode === 'loop' ? <Icons.CheckCircle2 size={20} className="text-green-500"/> : <Icons.AlertCircle size={20} className="text-amber-500"/>}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-semibold text-gray-900 mb-1">当前步骤</h4>
+                                            <p className="text-gray-600 text-sm leading-relaxed">{currentStepData ? currentStepData.desc : "Loading..."}</p>
+                                        </div>
+                                    </div>
+                                    {mode === 'loop' && step > 0 && <div className="mt-4 text-xs bg-green-50 text-green-700 p-2 rounded border border-green-100">注意：在循环中，i++ 和 ++i 是独立执行的语句，返回值都被丢弃了，所以最终 i 都是加了 1。</div>}
+                                    {mode === 'assignment' && <div className="mt-4 text-xs bg-amber-50 text-amber-700 p-2 rounded border border-amber-100">{subMode === 'post' ? "后置(i++)口诀：先赋值，再自增。先把 i 拿给 a，i 自己再偷偷变大。" : "前置(++i)口诀：先自增，再赋值。i 先变大，再把新值给 a。"}</div>}
+                                </div>
+
+                                {/* Playback Controls */}
+                                <div className="flex gap-3 mt-auto">
+                                    <button onClick={handleReset} className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition" title="Reset"><Icons.RotateCcw size={20} /></button>
+                                    <button onClick={() => setIsPlaying(!isPlaying)} className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                                        {isPlaying ? '暂停' : '播放演示'}
+                                        {isPlaying ? null : <Icons.Play size={18} fill="currentColor" />}
+                                    </button>
+                                    <button onClick={handleNext} disabled={step >= maxSteps - 1} className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition"><Icons.ChevronRight size={24} /></button>
+                                </div>
+                                <div className="text-center mt-4 text-xs text-gray-400">步骤: {step + 1} / {maxSteps}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
