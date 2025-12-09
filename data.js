@@ -48,26 +48,21 @@ const blogPosts = [
     }
     {
         id: 5,
-        title: "i++ & ++i", // 修改成您的标题
-        date: "2025-12-09",
+        title: "i++ & ++i", 
+        date: "2024-06-02",
         category: "HTML实验室",
-        summary: "这是一个独立上传的 HTML 文件，点击下方按钮查看。",
-        // ⚠️ 重要：请将下面的 my-animation.html 改成您刚刚上传的文件名
+        summary: "这是一个直接嵌入的独立 HTML 作品。",
+        // ⚠️ 记得把下面的 src="my-animation.html" 改成您真正上传的文件名
         content: `
-            <p>这个作品比较复杂，建议全屏查看以获得最佳体验。</p>
+            <p>下面是直接嵌入的演示窗口：</p>
             
-            <!-- 方式 1：新窗口打开 (推荐用于游戏或全屏动画) -->
-            <a href="i++ & ++i.html" target="_blank" class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                <i class="fas fa-external-link-alt mr-2"></i> 点击全屏体验
-            </a>
-
-            <br><br><hr class="my-6 border-gray-200 dark:border-gray-700"><br>
-
-            <!-- 方式 2：直接嵌入在文章里 (适合小组件) -->
-            <p class="mb-4">或者直接在这里预览：</p>
-            <div class="w-full h-[500px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <iframe src="i++ & ++i.html" class="w-full h-full border-0"></iframe>
+            <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
+                <iframe src="ippnppi.html" class="w-full h-full border-0"></iframe>
             </div>
+
+            <p class="mt-4 text-sm text-gray-400 text-center">
+                如果显示为空白，请检查文件名是否正确，或者该文件是否已上传到 GitHub 仓库根目录。
+            </p>
         `
     }
 ];
