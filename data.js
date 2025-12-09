@@ -47,22 +47,22 @@ const blogPosts = [
         `
     },
     {
-        id: 5,
-        title: "i++ & ++i", 
-        date: "2024-06-02",
-        category: "HTML实验室",
-        summary: "这是一个直接嵌入的独立 HTML 作品。",
-        // ⚠️ 记得把下面的 src="my-animation.html" 改成您真正上传的文件名
-        content: `
-            <p>下面是直接嵌入的演示窗口：</p>
-            
-            <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
-                <iframe src="ippnppi.html" class="w-full h-full border-0"></iframe>
-            </div>
+    id: 5,
+    title: "i++ & ++i 测试", // 标题可以用特殊符号，没关系
+    date: "2024-06-02",
+    category: "HTML实验室",
+    summary: "这是一个直接嵌入的独立 HTML 作品。",
+    // 👇 重点在这里：src 必须和您的文件名一模一样
+    content: `
+        <p>下面是直接嵌入的演示窗口：</p>
+        
+        <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
+            <iframe src="ippnppi.html" class="w-full h-full border-0"></iframe>
+        </div>
 
-            <p class="mt-4 text-sm text-gray-400 text-center">
-                如果显示为空白，请检查文件名是否正确，或者该文件是否已上传到 GitHub 仓库根目录。
-            </p>
-        `
-    }
+        <p class="mt-4 text-sm text-gray-400 text-center">
+            如果显示为空白，请检查文件名是否正确，或者该文件是否已上传到 GitHub 仓库根目录。
+        </p>
+    `
+  }
 ];
