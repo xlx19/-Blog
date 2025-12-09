@@ -56,7 +56,7 @@ const blogPosts = [
     content: `
         <p>下面是直接嵌入的演示窗口：</p>
         
-        <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
+        <div class="w-full h-[85vh] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
             <iframe src="ippnppi.html" class="w-full h-full border-0"></iframe>
         </div>
 
@@ -74,7 +74,7 @@ const blogPosts = [
     content: `
         <p>下面是直接嵌入的演示窗口：</p>
         
-        <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
+        <div class="w-full h-[85vh] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
             <iframe src="MPU6050加速度计原理可视化.html" class="w-full h-full border-0"></iframe>
         </div>
 
@@ -92,7 +92,7 @@ const blogPosts = [
     content: `
         <p>下面是直接嵌入的演示窗口：</p>
         
-        <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
+        <div class="w-full h-[85vh] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
             <iframe src="STM32单片机GPIO 模式可视化.html" class="w-full h-full border-0"></iframe>
         </div>
 
@@ -110,7 +110,7 @@ const blogPosts = [
     content: `
         <p>下面是直接嵌入的演示窗口：</p>
         
-        <div class="w-full h-[600px] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
+        <div class="w-full h-[85vh] border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white">
             <iframe src="上下拉模式可视化原理.html" class="w-full h-full border-0"></iframe>
         </div>
 
