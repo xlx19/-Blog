@@ -1,0 +1,188 @@
+/* 渐入动画 */
+.fade-in { animation: fadeIn 0.5s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 隐藏滚动条 */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* =========================================
+   文章正文样式 (Markdown Body)
+   ========================================= */
+
+.markdown-body p { margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+.markdown-body h2 { font-size: 1.5rem; font-weight: bold; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
+.markdown-body h3 { font-size: 1.25rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #1f2937; }
+.markdown-body ul, .markdown-body ol { margin-bottom: 1rem; padding-left: 1.5rem; color: #374151; list-style-type: disc; }
+.markdown-body li { margin-bottom: 0.5rem; }
+.markdown-body a { color: #2563eb; text-decoration: underline; }
+.markdown-body img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1rem 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+
+/* 引用块 */
+.markdown-body blockquote { 
+    border-left: 4px solid #3b82f6; 
+    padding-left: 1rem; 
+    color: #4b5563; 
+    font-style: italic; 
+    background: #f3f4f6; 
+    padding: 1rem; 
+    border-radius: 0.25rem; 
+    margin-bottom: 1rem; 
+}
+
+/* 行内代码 `npm install` */
+.markdown-body :not(pre) > code { 
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    background: #f3f4f6; 
+    color: #ef4444;       
+    padding: 0.2rem 0.4rem; 
+    border-radius: 0.25rem; 
+    font-size: 0.875em; 
+}
+
+/* =========================================
+   💻 Mac 窗口风格代码块 (核心修改)
+   ========================================= */
+
+/* 1. 代码块容器 */
+.markdown-body .highlight {
+    background: #282c34;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    position: relative;
+    padding-top: 36px; /* 留出顶部标题栏 */
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+}
+
+/* ✨ 全屏模式样式 */
+.markdown-body .highlight.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    border-radius: 0;
+    padding-top: 40px;
+    margin: 0;
+    overflow: auto; /* 允许滚动 */
+}
+
+/* 2. 🔴 🟡 🟢 装饰性红绿灯 (左上角) */
+.markdown-body .highlight::before {
+    content: " ";
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #fc625d;
+    box-shadow: 20px 0 0 #fdbc40, 40px 0 0 #35cd4b;
+    z-index: 10;
+}
+
+/* 3. 右上角功能按钮组容器 */
+.code-controls {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    display: flex;
+    gap: 6px; /* 按钮间距 */
+    z-index: 20;
+}
+
+/* 4. 圆形功能按钮样式 */
+.control-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%; /* 圆形 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #abb2bf;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: scale(1.1); /* 鼠标移上去轻微放大 */
+}
+
+/* 复制成功时的绿色反馈 */
+.control-btn.copied {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+/* 5. 隐藏行号样式 */
+.highlight.no-gutter .gutter {
+    display: none !important;
+}
+.highlight.no-gutter .code {
+    border-left: none !important;
+}
+
+/* 代码表格布局 */
+.markdown-body .highlight table { width: 100%; border-spacing: 0; border: none; }
+.markdown-body .highlight td { padding: 0; border: none; }
+
+.markdown-body .highlight .gutter {
+    color: #4b5263;
+    background: #282c34;
+    text-align: right;
+    padding: 0.5rem 0.8rem;
+    border-right: 1px solid #333842;
+    user-select: none;
+    width: 40px; /* 固定宽度 */
+}
+
+.markdown-body .highlight .code {
+    padding: 0.5rem 1rem;
+    width: 100%;
+    background: #282c34;
+    color: #abb2bf;
+}
+
+.markdown-body .highlight pre {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 0.9em;
+    line-height: 1.6;
+}
+
+/* =========================================
+   🎨 代码高亮配色 (Atom One Dark)
+   ========================================= */
+.highlight .comment { color: #5c6370; font-style: italic; }
+.highlight .keyword, .highlight .selector-tag { color: #c678dd; }
+.highlight .string { color: #98c379; }
+.highlight .title, .highlight .function { color: #61afef; }
+.highlight .variable, .highlight .template-variable { color: #e06c75; }
+.highlight .number { color: #d19a66; }
+.highlight .tag { color: #e06c75; }
+.highlight .attr { color: #d19a66; }
+
+/* =========================================
+   深色模式适配
+   ========================================= */
+.dark .markdown-body p, .dark .markdown-body ul { color: #d1d5db; }
+.dark .markdown-body h2, .dark .markdown-body h3 { color: #f3f4f6; }
+.dark .markdown-body blockquote { color: #9ca3af; background: #374151; }
+.dark .markdown-body :not(pre) > code { background: #374151; color: #fca5a5; }
+.dark .markdown-body a { color: #60a5fa; }
+
+/* 按钮状态 */
+.filter-btn.active { background-color: #dbeafe; color: #1d4ed8; border-color: transparent; }
+.dark .filter-btn.active { background-color: #1e3a8a; color: #bfdbfe; }

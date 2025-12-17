@@ -1,0 +1,81 @@
+<div id="home-view" class="fade-in">
+  <!-- 简介卡片 -->
+  <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 mb-10 text-white shadow-lg">
+    
+    <!-- 👇 修改 1：在这里修改你的大标题 -->
+    <h1 class="text-3xl font-bold mb-4">NO INOUT NO OUTPUT 🌱</h1>
+    
+    <!-- 👇 修改 2：在这里修改你的自我介绍文字 -->
+    <p class="text-blue-100 text-lg max-w-2xl">
+      记录又菜又爱折腾的过程<br>
+      正在学习STM32、Arduino单片机
+    </p>
+  </div>
+
+  <!-- 分类标签栏 -->
+  <div class="flex space-x-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+    <!-- "全部"按钮 (固定保留) -->
+    <button onclick="filterPosts('全部', this)" class="filter-btn active px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap transition border border-transparent bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">全部</button>
+    
+    <!-- 👇 自动生成分类按钮 (STM32按钮会自动出现在这里) 👇 -->
+    <!-- 原理：Hexo 会自动读取你所有文章里的 categories: xxx，然后在这里循环生成按钮 -->
+    <% site.categories.forEach(function(category){ %>
+      <button onclick="filterPosts('<%= category.name %>', this)" class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap transition border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">
+        <%= category.name %>
+      </button>
+    <% }) %>
+    
+    <!-- 👇 如果你想手动加一个死链接 (比如跳转到外部)，加在这里 👇 -->
+    <!-- 
+    <a href="https://github.com/xlx19" target="_blank" class="px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap transition border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">
+        GitHub
+    </a>
+    -->
+  </div>
+
+  <!-- 文章列表容器 -->
+  <div id="posts-container" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+    <% page.posts.forEach(function(post){ %>
+      <!-- 生成文章卡片 -->
+      <div class="post-card bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition cursor-pointer border border-gray-100 dark:border-gray-700 overflow-hidden group flex flex-col h-full"
+           data-category="<%= post.categories.length > 0 ? post.categories.data[0].name : '未分类' %>"
+           onclick="location.href='<%= url_for(post.path) %>'">
+        <div class="p-6 flex flex-col flex-grow">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full">
+              <%= post.categories.length > 0 ? post.categories.data[0].name : '未分类' %>
+            </span>
+            <span class="text-xs text-gray-400"><%= date(post.date, 'YYYY-MM-DD') %></span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+            <%= post.title %>
+          </h3>
+          <p class="text-gray-600 dark:text-gray-300 text-sm line-clamp-3 mb-4 flex-grow">
+            <!-- 自动截取摘要 -->
+            <%= post.excerpt ? strip_html(post.excerpt) : strip_html(post.content).substring(0, 80) + '...' %>
+          </p>
+          <div class="text-blue-600 dark:text-blue-400 text-sm font-medium mt-auto group-hover:translate-x-1 transition-transform inline-block">
+            阅读全文 <i class="fa-solid fa-arrow-right ml-1"></i>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+  
+  <!-- 空状态 -->
+  <div id="empty-state" class="hidden text-center py-20">
+      <div class="text-gray-300 dark:text-gray-600 text-6xl mb-4"><i class="fa-regular fa-folder-open"></i></div>
+      <p class="text-gray-500 dark:text-gray-400 text-lg">这个分类下暂时没有内容哦</p>
+  </div>
+
+  <!-- 分页 -->
+  <% if (page.total > 1){ %>
+    <nav class="mt-12 flex justify-center">
+      <%- paginator({
+        prev_text: '<i class="fa-solid fa-angle-left"></i> 上一页',
+        next_text: '下一页 <i class="fa-solid fa-angle-right"></i>',
+        escape: false
+      }) %>
+    </nav>
+  <% } %>
+</div>

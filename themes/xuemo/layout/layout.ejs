@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= config.title || '薛某的个人博客' %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-300">
+
+  <!-- 导航栏 -->
+  <nav class="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50 transition-colors duration-300">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center cursor-pointer" onclick="location.href='/'">
+          <i class="fa-solid fa-code text-blue-600 text-2xl mr-2"></i>
+          <span class="font-bold text-xl tracking-tight text-gray-900 dark:text-white"><%= config.title %></span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button id="theme-toggle" class="p-2 rounded-full text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition">
+            <i id="theme-icon" class="fas fa-moon"></i>
+          </button>
+          <a href="https://github.com/xlx19" target="_blank" class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition"><i class="fa-brands fa-github text-xl"></i></a>
+          <button onclick="alert('关于页面施工中...')" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition font-medium">关于我</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 内容区域：这里挖了一个坑，用来放 index.ejs 或 post.ejs 的内容 -->
+  <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <%- body %>
+  </main>
+
+  <!-- 底部 -->
+  <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12 py-8 text-center text-gray-500 dark:text-gray-400 text-sm transition-colors duration-300">
+    <p>&copy; <%= new Date().getFullYear() %> <%= config.author %>. Powered by Hexo & Cloudflare Pages</p>
+  </footer>
+
+  <script src="/js/script.js"></script>
+</body>
+</html>
